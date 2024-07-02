@@ -30,13 +30,17 @@ def mixture_consistency(
     source_weights = torch.tensor(source_weights).to(estimated_sources)
     source_weights = source_weights / source_weights.sum()
     n_trailing_dims = len(estimated_sources.shape[source_dim + 1 :])
-    source_weights = source_weights.reshape(source_weights.shape + (1,) * n_trailing_dims)
+    source_weights = source_weights.reshape(
+        source_weights.shape + (1,) * n_trailing_dims
+    )
     res = mixture - estimated_sources.sum(source_dim)
     new_source_signals = estimated_sources + source_weights * res.unsqueeze(source_dim)
     return new_source_signals
 
 
-def dnr_consistency(mixture: torch.Tensor, estimated_sources: torch.Tensor, mode: str = "pass") -> torch.Tensor:
+def dnr_consistency(
+    mixture: torch.Tensor, estimated_sources: torch.Tensor, mode: str = "pass"
+) -> torch.Tensor:
     """
     Postprocessing for adding residual between mixture and estimated sources back to estimated sources.
 
@@ -58,6 +62,8 @@ def dnr_consistency(mixture: torch.Tensor, estimated_sources: torch.Tensor, mode
         return mixture_consistency(mixture, estimated_sources, source_dim)
     elif mode == "music_sfx":
         source_weights = [0 if src == "speech" else 0.5 for src in SOURCE_NAMES]
-        return mixture_consistency(mixture, estimated_sources, source_dim, source_weights)
+        return mixture_consistency(
+            mixture, estimated_sources, source_dim, source_weights
+        )
     else:
         return estimated_sources

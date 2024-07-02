@@ -33,22 +33,30 @@ def _lightning_eval():
     parser.add_argument(
         "--root-dir",
         type=Path,
-        help="The path to the DnR directory containing ``tr`` ``cv``  and ``tt`` directories.",
+        help="The path to the DnR directory containing "
+        "``tr`` ``cv``  and ``tt`` directories.",
     )
     parser.add_argument(
         "--checkpoint",
         type=Path,
         default=DEFAULT_PRE_TRAINED_MODEL_PATH,
-        help="Path to trained model weights. Can be a pytorch_lightning checkpoint or pytorch state_dict",
+        help="Path to trained model weights. Can be a pytorch_lightning "
+        "checkpoint or pytorch state_dict",
     )
-    parser.add_argument("--gpu-device", default=-1, type=int, help="The gpu device for model inference. (default: -1)")
+    parser.add_argument(
+        "--gpu-device",
+        default=-1,
+        type=int,
+        help="The gpu device for model inference. (default: -1)",
+    )
     parser.add_argument(
         "--mixture-residual",
         default="pass",
         type=str,
         choices=["all", "pass", "music_sfx"],
-        help="Whether to add the residual to estimates, 'pass' doesn't add residual, 'all' splits residual among "
-        "all sources, 'music_sfx' splits residual among only music and sfx sources . (default: pass)",
+        help="Whether to add the residual to estimates, 'pass' doesn't add residual, "
+        "'all' splits residual among all sources, 'music_sfx' splits residual among "
+        "only music and sfx sources . (default: pass)",
     )
     args = parser.parse_args()
 

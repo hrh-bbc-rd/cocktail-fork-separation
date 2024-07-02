@@ -27,8 +27,10 @@ class DivideAndRemaster(data.Dataset):
         """
         :param root_path: path to top level dataset directory
         :param subset: Options: [``"tr"``, ``"cv"``, ``"tt"``].
-        :param chunk_size_sec: in seconds, instead of reading entire file, read only a chunk of this size
-        :param random_start: If True and chunk_size_sec is specified, __get_item()___ will use a random start sample
+        :param chunk_size_sec: in seconds, instead of reading entire file, read only a
+            chunk of this size
+        :param random_start: If True and chunk_size_sec is specified, __get_item()___
+            will use a random start sample
         """
         self.path = os.path.join(root_path, subset)
         if not os.path.isdir(self.path):
@@ -54,7 +56,8 @@ class DivideAndRemaster(data.Dataset):
 
     def _check_subset_lengths(self, subset: str):
         """
-        Assert if the number of files is incorrect, to ensure we are using DnR v2 not an old version
+        Assert if the number of files is incorrect, to ensure we are using DnR v2 not an
+        old version
         """
         if subset == "tr":
             assert len(self.track_list) == 3406, "Expected 3406 mix in training set"
@@ -75,12 +78,21 @@ class DivideAndRemaster(data.Dataset):
             num_frames_to_read = -1
         else:
             if self.random_start:
-                start_frame = int(torch.randint(0, num_frames_total - self.chunk_size, (1,)))
+                start_frame = int(
+                    torch.randint(0, num_frames_total - self.chunk_size, (1,))
+                )
         return start_frame, num_frames_to_read
 
-    def _read_audio(self, path: Path, frame_offset: Optional[int] = 0, num_frames: Optional[int] = -1) -> torch.Tensor:
+    def _read_audio(
+        self,
+        path: Path,
+        frame_offset: Optional[int] = 0,
+        num_frames: Optional[int] = -1,
+    ) -> torch.Tensor:
         y, sr = torchaudio.load(path, frame_offset=frame_offset, num_frames=num_frames)
-        assert sr == SAMPLE_RATE, "audio samplerate of data does not match requested samplerate"
+        assert (
+            sr == SAMPLE_RATE
+        ), "audio samplerate of data does not match requested samplerate"
         return y
 
     def _load_track(self, index: int) -> Tuple[torch.Tensor, torch.Tensor, str]:
@@ -102,12 +114,9 @@ class DivideAndRemaster(data.Dataset):
 
         :param index (int): sample index to load
         :return:
-            Tuple of the following items;
-            torch.Tensor:
-                mixture [channels, samples]
-            torch.Tensor:
-                targets [sources, channels, samples]
-            str:
+            Tuple of the following items; torch.Tensor:
+                mixture [channels, samples] torch.Tensor:
+                targets [sources, channels, samples] str:
                 Dataset filename
         """
         return self._load_track(index)

@@ -41,7 +41,12 @@ def _lightning_eval():
         default=DEFAULT_PRE_TRAINED_MODEL_PATH,
         help="Path to trained model weights. Can be a pytorch_lightning checkpoint or pytorch state_dict",
     )
-    parser.add_argument("--gpu-device", default=-1, type=int, help="The gpu device for model inference. (default: -1)")
+    parser.add_argument(
+        "--gpu-device",
+        default=-1,
+        type=int,
+        help="The gpu device for model inference. (default: -1)",
+    )
     parser.add_argument(
         "--mixture-residual",
         default="pass",

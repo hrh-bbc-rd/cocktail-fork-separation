@@ -45,7 +45,9 @@ class CocktailForkModule(LightningModule):
         x, y, filenames = batch
         y_hat = self.model(x)
         y_hat = dnr_consistency(x, y_hat, mode=self.mixture_residual)
-        est_sisdr = -snr_loss(y_hat, y, scale_invariant=True).mean(-1).mean(0)  # average of batch and channel
+        est_sisdr = (
+            -snr_loss(y_hat, y, scale_invariant=True).mean(-1).mean(0)
+        )  # average of batch and channel
         est_snr = -snr_loss(y_hat, y, scale_invariant=False).mean(-1).mean(0)
         # expand mixture to shape of isolated sources for noisy SDR
         repeat_shape = len(y.shape) * [1]
@@ -64,8 +66,15 @@ class CocktailForkModule(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=3)
-        lr_scheduler_config = {"scheduler": lr_scheduler, "monitor": "val_loss", "interval": "epoch", "frequency": 1}
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="min", factor=0.5, patience=3
+        )
+        lr_scheduler_config = {
+            "scheduler": lr_scheduler,
+            "monitor": "val_loss",
+            "interval": "epoch",
+            "frequency": 1,
+        }
         return [optimizer], [lr_scheduler_config]
 
 
@@ -76,8 +85,9 @@ def _get_dataloaders(
     eval_batch_size: int = 5,
     num_workers: int = 4,
 ) -> Tuple[DataLoader]:
-
-    train_dataset = DivideAndRemaster(dnr_root_dir, "tr", chunk_size_sec=train_chunk_sec, random_start=True)
+    train_dataset = DivideAndRemaster(
+        dnr_root_dir, "tr", chunk_size_sec=train_chunk_sec, random_start=True
+    )
     train_loader = DataLoader(
         train_dataset,
         batch_size=train_batch_size,
@@ -112,7 +122,10 @@ def cli_main():
         help="The path to the DnR directory containing ``tr`` ``cv``  and ``tt`` directories.",
     )
     parser.add_argument(
-        "--exp-dir", default=Path("./exp"), type=Path, help="The directory to save checkpoints and logs."
+        "--exp-dir",
+        default=Path("./exp"),
+        type=Path,
+        help="The directory to save checkpoints and logs.",
     )
     parser.add_argument(
         "--chunk-size",
@@ -166,7 +179,9 @@ def cli_main():
         args.num_workers,
     )
 
-    checkpoint = ModelCheckpoint(monitor="val_loss", mode="min", save_top_k=5, verbose=True)
+    checkpoint = ModelCheckpoint(
+        monitor="val_loss", mode="min", save_top_k=5, verbose=True
+    )
     callbacks = [checkpoint]
     if args.num_gpu > 0:
         devices = args.num_gpu

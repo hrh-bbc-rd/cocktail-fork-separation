@@ -80,7 +80,9 @@ class MRX(torch.nn.Module):
                 mask = mask.transpose(-1, -2)  # swap time and frequency dimensions
                 mask = mask.reshape(complex_spec.shape)
                 masked_spec = mask * complex_spec
-                multi_res_signals.append(_istft(masked_spec, self._n_hop, signal_length))
+                multi_res_signals.append(
+                    _istft(masked_spec, self._n_hop, signal_length)
+                )
             masked_source = torch.sum(torch.stack(multi_res_signals), dim=0)
             masked_source_signals.append(masked_source)
         # Return the source signals stacked after batch dimension
@@ -92,7 +94,9 @@ class MRX(torch.nn.Module):
         return masked_source_signals
 
 
-def _stft(signal: torch.Tensor, n_fft: int = 1024, hop_length: int = 256) -> torch.Tensor:
+def _stft(
+    signal: torch.Tensor, n_fft: int = 1024, hop_length: int = 256
+) -> torch.Tensor:
     leading_dims = list(signal.shape[:-1])
     n_samples = int(signal.shape[-1])
     signal = signal.reshape(-1, n_samples)
@@ -112,7 +116,9 @@ def _stft(signal: torch.Tensor, n_fft: int = 1024, hop_length: int = 256) -> tor
     return spectrogram.view(leading_dims)
 
 
-def _istft(spectrogram: torch.Tensor, hop_length: int, signal_length: int) -> torch.Tensor:
+def _istft(
+    spectrogram: torch.Tensor, hop_length: int, signal_length: int
+) -> torch.Tensor:
     leading_dims = list(spectrogram.shape[:-2])
     n_freqs = int(spectrogram.shape[-2])
     n_frames = int(spectrogram.shape[-1])
@@ -150,7 +156,9 @@ class _EncoderBlock(torch.nn.Module):
         super().__init__()
 
         self.layer = torch.nn.Sequential(
-            torch.nn.BatchNorm1d(num_inputs),  # replaces mean-variance normalization from original XUMX
+            torch.nn.BatchNorm1d(
+                num_inputs
+            ),  # replaces mean-variance normalization from original XUMX
             torch.nn.Linear(num_inputs, num_hidden, bias=False),
             torch.nn.BatchNorm1d(num_hidden),
         )
@@ -186,9 +194,13 @@ class _DecoderBlock(torch.nn.Module):
     def __init__(self, num_outputs: int, num_hidden: int) -> None:
         super().__init__()
 
-        first_layer_num_inputs = 2 * num_hidden  # concatenated CrossNet LSTM inputs/outputs
+        first_layer_num_inputs = (
+            2 * num_hidden
+        )  # concatenated CrossNet LSTM inputs/outputs
         self.block = torch.nn.Sequential(
-            torch.nn.Linear(in_features=first_layer_num_inputs, out_features=num_hidden, bias=False),
+            torch.nn.Linear(
+                in_features=first_layer_num_inputs, out_features=num_hidden, bias=False
+            ),
             torch.nn.BatchNorm1d(num_hidden),
             torch.nn.ReLU(),
             torch.nn.Linear(num_hidden, num_outputs, bias=False),
@@ -231,5 +243,9 @@ class _CrossNet(torch.nn.Module):
 
     def forward(self, inputs: List[torch.Tensor]) -> torch.Tensor:
         cross_1 = torch.mean(torch.stack(inputs), dim=0)
-        cross_2 = torch.mean(torch.stack([layer(cross_1)[0] for layer in self.lstm]), dim=0)
-        return torch.cat([cross_1, cross_2], dim=-1)  # use concat skip connection from original XUMX
+        cross_2 = torch.mean(
+            torch.stack([layer(cross_1)[0] for layer in self.lstm]), dim=0
+        )
+        return torch.cat(
+            [cross_1, cross_2], dim=-1
+        )  # use concat skip connection from original XUMX

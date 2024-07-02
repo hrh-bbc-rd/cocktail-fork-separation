@@ -14,8 +14,7 @@ from .consistency import dnr_consistency
 from .dnr_dataset import EXT, SAMPLE_RATE, SOURCE_NAMES
 from .mrx import MRX
 
-# DEFAULT_PRE_TRAINED_MODEL_PATH = Path("checkpoints") / "default_mrx_pre_trained_weights.pth"
-DEFAULT_PRE_TRAINED_MODEL_PATH = "/Users/helenar/Dropbox (BBC)/r3-BSS/bss-dialogue-enhancement/packages/cocktail-fork-separation/checkpoints/default_mrx_pre_trained_weights.pth"
+DEFAULT_PRE_TRAINED_MODEL_PATH = "checkpoints/default_mrx_pre_trained_weights.pth"
 
 
 def load_default_pre_trained():
@@ -30,8 +29,9 @@ def _mrx_output_to_dict(output: torch.tensor) -> dict:
     Convert MRX() to dictionary with one key per output source.
 
     :param output (torch.tensor): 3D Tensor of shape [3, channels, samples]
-    :return: (dictionary): {'music': music_samples, 'speech': speech_samples, 'sfx': sfx_samples}
-                            where each of the x_samples are 2D Tensor of shape [channels, samples]
+    :return: (dictionary): {'music': music_samples, 'speech': speech_samples, 'sfx':
+                            sfx_samples} where each of the x_samples are 2D Tensor of
+                            shape [channels, samples]
     """
     output_dict = {}
     for src_name, audio_data in zip(SOURCE_NAMES, output):
@@ -45,7 +45,8 @@ def _compute_gain(audio_tensor: torch.tensor, target_lufs: float) -> float:
 
     :param audio_tensor (torch.tensor): 2D Tensor of shape [channels, samples].
     :param target_lufs (float): Target level in loudness units full scale.
-    :return gain (float): Gain that when multiplied by audio_tensor will achieve target_lufs
+    :return gain (float): Gain that when multiplied by audio_tensor will achieve
+        target_lufs
     """
     meter = pyloudnorm.Meter(SAMPLE_RATE)
     loudness = meter.integrated_loudness(audio_tensor.cpu().numpy().T)
@@ -62,22 +63,29 @@ def separate_soundtrack(
     input_lufs: Optional[float] = -27.0,
 ):
     """
-    Separates a torch.Tensor into three stems. If a separation_model is provided, it will be used,
-    otherwise the included pre-trained weights will be used.
+    Separates a torch.Tensor into three stems. If a separation_model is provided, it
+    will be used, otherwise the included pre-trained weights will be used.
 
-    :param audio_tensor (torch.tensor): 2D Tensor of shape [channels, samples]. Assumed samplerate of 44.1 kHz.
-    :param separation_model (MRX, optional): a preloaded MRX model, or none to use included
-                                             pre-trained model.
-    :param device (int, optional): The gpu device for model inference. (default: -1) [cpu]
+    :param audio_tensor (torch.tensor): 2D Tensor of shape [channels, samples]. Assumed
+        samplerate of 44.1 kHz.
+    :param separation_model (MRX, optional): a preloaded MRX model, or none to use
+                                             included pre-trained model.
+    :param device (int, optional): The gpu device for model inference. (default: -1)
+        [cpu]
     :param consistency_mode (str, optional): choices=["all", "pass", "music_sfx"],
-                                             Whether to add the residual to estimates, 'pass' doesn't add residual,
-                                             'all' splits residual among all sources, 'music_sfx' splits residual among
-                                              only music and sfx sources . (default: pass)"
-    :param input_lufs (float, optional): Add gain to input and normalize output, so audio input level matches average
-                                         of Divide and Remaster dataset in loudness units full scale.
+                                             Whether to add the residual to estimates,
+                                             'pass' doesn't add residual, 'all' splits
+                                             residual among all sources, 'music_sfx'
+                                             splits residual among
+                                              only music and sfx sources . (default:
+                                              pass)"
+    :param input_lufs (float, optional): Add gain to input and normalize output, so
+                                         audio input level matches average of Divide and
+                                         Remaster dataset in loudness units full scale.
                                          Pass None to skip. (default: -27)
-    :return: (dictionary): {'music': music_samples, 'speech': speech_samples, 'sfx': sfx_samples}
-                            where each of the x_samples are 2D Tensor of shape [channels, samples]
+    :return: (dictionary): {'music': music_samples, 'speech': speech_samples, 'sfx':
+                            sfx_samples} where each of the x_samples are 2D Tensor of
+                            shape [channels, samples]
     """
     if separation_model is None:
         separation_model = load_default_pre_trained()
@@ -106,20 +114,27 @@ def separate_soundtrack_file(
     input_lufs: Optional[float] = -27.0,
 ) -> None:
     """
-    Takes the path to a wav file, separates it, and saves the results in speech.wav, music.wav, and sfx.wav.
-    Wraps seperate_soundtrack(). Audio will be resampled if it's not at the correct samplerate.
+    Takes the path to a wav file, separates it, and saves the results in speech.wav,
+    music.wav, and sfx.wav. Wraps seperate_soundtrack(). Audio will be resampled if it's
+    not at the correct samplerate.
 
     :param audio_filepath (Path): path to mixture audio file to be separated
     :param output_directory (Path): directory where separated audio files will be saved
-    :param separation_model (MRX, optional): a preloaded MRX model, or none to use included
-                                             pre-trained model.
-    :param device (int, optional): The gpu device for model inference. (default: -1) [cpu]
+    :param separation_model (MRX, optional): a preloaded MRX model, or none to use
+                                             included pre-trained model.
+    :param device (int, optional): The gpu device for model inference. (default: -1)
+        [cpu]
     :param consistency_mode (str, optional): choices=["all", "pass", "music_sfx"],
-                                             Whether to add the residual to estimates, 'pass' doesn't add residual,
-                                             'all' splits residual among all sources, 'music_sfx' splits residual among
-                                              only music and sfx sources . (default: pass)"
-    :param input_lufs (float, optional): Add gain to input and normalize output, so audio input level matches average
-                                         of Divide and Remaster dataset in loudness units full scale. (default: -27)
+                                             Whether to add the residual to estimates,
+                                             'pass' doesn't add residual, 'all' splits
+                                             residual among all sources, 'music_sfx'
+                                             splits residual among
+                                              only music and sfx sources . (default:
+                                              pass)"
+    :param input_lufs (float, optional): Add gain to input and normalize output, so
+                                         audio input level matches average of Divide and
+                                         Remaster dataset in loudness units full scale.
+                                         (default: -27)
     """
     audio_tensor, fs = torchaudio.load(audio_filepath)
     if fs != SAMPLE_RATE:

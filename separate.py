@@ -14,7 +14,9 @@ from consistency import dnr_consistency
 from dnr_dataset import EXT, SAMPLE_RATE, SOURCE_NAMES
 from mrx import MRX
 
-DEFAULT_PRE_TRAINED_MODEL_PATH = Path("checkpoints") / "default_mrx_pre_trained_weights.pth"
+DEFAULT_PRE_TRAINED_MODEL_PATH = (
+    Path("checkpoints") / "default_mrx_pre_trained_weights.pth"
+)
 
 
 def load_default_pre_trained():
@@ -88,7 +90,9 @@ def separate_soundtrack(
             gain = _compute_gain(audio_tensor, input_lufs)
             audio_tensor *= gain
         output_tensor = separation_model(audio_tensor)
-        output_tensor = dnr_consistency(audio_tensor, output_tensor, mode=consistency_mode)
+        output_tensor = dnr_consistency(
+            audio_tensor, output_tensor, mode=consistency_mode
+        )
         if input_lufs is not None:
             output_tensor /= gain
     return _mrx_output_to_dict(output_tensor)
@@ -122,7 +126,11 @@ def separate_soundtrack_file(
     if fs != SAMPLE_RATE:
         audio_tensor = torchaudio.functional.resample(audio_tensor, fs, SAMPLE_RATE)
     output_dict = separate_soundtrack(
-        audio_tensor, separation_model, device, consistency_mode=consistency_mode, input_lufs=input_lufs
+        audio_tensor,
+        separation_model,
+        device,
+        consistency_mode=consistency_mode,
+        input_lufs=input_lufs,
     )
     for k, v in output_dict.items():
         output_path = Path(output_directory) / f"{k}{EXT}"
@@ -142,7 +150,12 @@ def cli_main():
         default=Path("./separated_output"),
         help="Path to directory for saving output files.",
     )
-    parser.add_argument("--gpu-device", default=-1, type=int, help="The gpu device for model inference. (default: -1)")
+    parser.add_argument(
+        "--gpu-device",
+        default=-1,
+        type=int,
+        help="The gpu device for model inference. (default: -1)",
+    )
     parser.add_argument(
         "--mixture-residual",
         default="pass",
@@ -158,7 +171,12 @@ def cli_main():
         device = torch.device("cpu")
     output_dir = args.out_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    separate_soundtrack_file(args.audio_path, output_dir, device=device, consistency_mode=args.mixture_residual)
+    separate_soundtrack_file(
+        args.audio_path,
+        output_dir,
+        device=device,
+        consistency_mode=args.mixture_residual,
+    )
 
 
 if __name__ == "__main__":
